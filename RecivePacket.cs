@@ -7,14 +7,14 @@ internal static class RecivePacket
     #region Recebidos do host
     internal static void ReceberSaudação_DoHost(Packet p)
     {
-        PlayerDebuger.instance.DebugMassage("O host me pediu para que eu conectasse a todos");
+        Debug.Log("O host me pediu para que eu conectasse a todos");
         
     }
     #endregion
     #region Recebido de clientes
     internal static void ReceberSaudação(Packet p)
     {
-        PlayerDebuger.instance.DebugMassage("Recebi saudação!");
+        Debug.Log("Recebi saudação!");
         CSteamID id = p.ReadCSteamID();
 
     }

@@ -9,7 +9,7 @@ internal static class SendPacket
     #region Host
     internal static void DevolverSaudação(CSteamID alvo)
     {
-        PlayerDebuger.instance.DebugMassage("Devolvi a saudação");
+        Debug.Log("Devolvi a saudação");
         using (Packet p = new Packet(-1))
         {
             p.Write((int)ServerPackets.devolverSaudação);
@@ -19,9 +19,9 @@ internal static class SendPacket
     }
     #endregion
     #region Client
-    internal static void Saudação(Color cor, CSteamID alvo)
+    internal static void Saudação(CSteamID alvo)
     {
-        PlayerDebuger.instance.DebugMassage("Enviei saudação");
+        Debug.Log("Enviei saudação");
         using (Packet p = new Packet((int)ClientPackets.saudação))
         {
             p.Write(SteamUser.GetSteamID());
@@ -31,7 +31,7 @@ internal static class SendPacket
     }
     internal static void Pingar()
     {
-        print("Pinguei");
+        Debug.Log("Pinguei");
         using (Packet p = new Packet((int)ClientPackets.pingar))
         {
             p.Write(SteamUser.GetSteamID());
