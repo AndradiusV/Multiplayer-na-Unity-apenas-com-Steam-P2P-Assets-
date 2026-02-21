@@ -14,6 +14,8 @@ public class LobbyManager : MonoBehaviour
     #region Callbacks
     protected Callback<LobbyCreated_t> lobbyCreated;
     protected Callback<LobbyEnter_t> lobbyEntered;
+    internal Callback<LobbyChatMsg_t> lobbyChatMsg;
+    protected Callback<LobbyMatchList_t> lobbyMatchList;
     protected Callback<GameLobbyJoinRequested_t> lobbyJoinRequested;
     protected Callback<SteamNetConnectionStatusChangedCallback_t> connectionStatusChanged;
     #endregion
@@ -39,6 +41,7 @@ public class LobbyManager : MonoBehaviour
         #region Callbacks
         lobbyCreated = Callback<LobbyCreated_t>.Create(OnLobbyCreated);
         lobbyEntered = Callback<LobbyEnter_t>.Create(OnLobbyEntered);
+        lobbyChatMsg = Callback<LobbyChatMsg_t>.Create(OnLobbyChatMsg);
         lobbyJoinRequested = Callback<GameLobbyJoinRequested_t>.Create(OnLobbyJoinRequested);
         connectionStatusChanged = Callback<SteamNetConnectionStatusChangedCallback_t>.Create(P2P.instance.OnConnectionStatusChanged);
         #endregion
@@ -131,6 +134,97 @@ public class LobbyManager : MonoBehaviour
     internal void LobbyTypeChange(ELobbyType valor)
     {
         SteamMatchmaking.SetLobbyType(currentLobbyId, valor);
+    }
+    /// <summary> Define uma informação do lobby </summary>
+    internal void SetLobbyData(string key, string valor)
+    {
+        SteamMatchmaking.SetLobbyData(currentLobbyId, key, valor);
+    }
+    #endregion
+    #region Mensagens no Lobby
+    // --------------------------------------------------------------------
+    // Chamado quando alguém envia uma mensagem no chat do lobby
+    // --------------------------------------------------------------------
+    void OnLobbyChatMsg(LobbyChatMsg_t data)
+    {
+        byte[] buffer = new byte[4096];
+
+        SteamMatchmaking.GetLobbyChatEntry(
+            currentLobbyId,
+            (int)data.m_iChatID,
+            out CSteamID sender,
+            buffer,
+            buffer.Length,
+            out EChatEntryType type
+        );
+        //Verifica se quem envou a mensagem é você mesmo, se for então irá ignora-la
+        if (sender == SteamUser.GetSteamID())
+            return;
+
+        string msg = System.Text.Encoding.UTF8.GetString(buffer).TrimEnd('\0');
+        //No meu caso eu estou separando as informações das mensagens por ":"
+        //Exomplo: Mensagem recebida é "UPDATE_PLINFO:2:1:0"
+        //Ao separar a mensagem teremos "UPDATE_PLINFO", "2","1", "0" onde esses valores podem ser a vida, dano e pontos do jogador
+        string[] infos = msg.Split(':');
+
+        if (infos[0] == "UPDATE_PLINFO")
+        {
+
+        }
+        else if (infos[0] == "UPDATE_LOBBYINFO")
+        {
+
+        }
+    }
+    /// <summary>
+    /// Envia uma mesangem no chat do host. tente usar isso com um padrão para trocar informações importantes.
+    /// </summary>
+    /// <param name="mensagem"></param>
+    public void EnviarMensagemParaLobby(string mensagem)
+    {
+        byte[] msg = System.Text.Encoding.UTF8.GetBytes(mensagem);
+        SteamMatchmaking.SendLobbyChatMsg(currentLobbyId, msg, msg.Length);
+    }
+    #endregion
+    #region Lobby list
+    public void ProcuraLobbies()
+    {
+        #region Filtro opcional
+        SteamMatchmaking.AddRequestLobbyListStringFilter(
+            "NOME DO QUE VOCÊ QUER COMPARAR",
+            "O QUE QUER COMPARAR",
+            ELobbyComparison.k_ELobbyComparisonEqual
+        );
+        #endregion
+
+        // Número máximo de resultados
+        SteamMatchmaking.AddRequestLobbyListResultCountFilter(20);
+
+        SteamMatchmaking.RequestLobbyList();
+    }
+    /// <summary> É chamado quando a steam devolve uma lista de lobbys, apartir disso você decide o que é feito </summary>
+    private void OnLobbyMatchList(LobbyMatchList_t result)
+    {
+        Debug.Log("Lobbies encontrados: " + result.m_nLobbiesMatching);
+
+        #region Exemplo
+        //Cicla entre os lobbys achados
+        for (int i = 0; i < result.m_nLobbiesMatching; i++)
+        {
+            CSteamID lobbyID = SteamMatchmaking.GetLobbyByIndex(i);
+
+            //Pega o nome do lobby
+            string nomeDoLobby = SteamMatchmaking.GetLobbyData(lobbyID, "name");
+            //Pega a quantidade de jogadores dentro do lobby
+            int members = SteamMatchmaking.GetNumLobbyMembers(lobbyID);
+
+            Debug.Log($"Lobby {i}: {nomeDoLobby} | Jogadores: {members}");
+
+            /*Uma dica é para você criar uma lista com esses
+             * lobbys achados e depois criar botões com a UI para
+             * poder escolher o lobby para entrar */
+        }
+        #endregion
     }
     #endregion
 }
