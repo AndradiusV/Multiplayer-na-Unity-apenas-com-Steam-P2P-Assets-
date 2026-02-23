@@ -1,4 +1,3 @@
-using GameServer;
 using Steamworks;
 using System;
 using System.Collections.Generic;
@@ -42,6 +41,7 @@ public class LobbyManager : MonoBehaviour
         lobbyCreated = Callback<LobbyCreated_t>.Create(OnLobbyCreated);
         lobbyEntered = Callback<LobbyEnter_t>.Create(OnLobbyEntered);
         lobbyChatMsg = Callback<LobbyChatMsg_t>.Create(OnLobbyChatMsg);
+        lobbyMatchList = Callback<LobbyMatchList_t>.Create(OnLobbyMatchList);
         lobbyJoinRequested = Callback<GameLobbyJoinRequested_t>.Create(OnLobbyJoinRequested);
         connectionStatusChanged = Callback<SteamNetConnectionStatusChangedCallback_t>.Create(P2P.instance.OnConnectionStatusChanged);
         #endregion
@@ -50,6 +50,7 @@ public class LobbyManager : MonoBehaviour
 
         listenSocket = SteamNetworkingSockets.CreateListenSocketP2P(0, 0, null);
     }
+    #region Comandos
     // Criar um lobby (host)
     public void CreateLobby()
     {
@@ -80,6 +81,7 @@ public class LobbyManager : MonoBehaviour
         Conectado = false;
         P2P.instance.Clear();
     }
+    #endregion
     #region Callbacks
     // Callback quando o lobby é criado
     private void OnLobbyCreated(LobbyCreated_t result)
